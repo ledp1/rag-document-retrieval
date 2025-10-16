@@ -1,0 +1,70 @@
+from scripts.llm import get_llm_response
+
+KNOWLEDGE_BASE = {
+    "doc1": {
+        "title": "Project Chimera Overview",
+        "content": (
+            "Project Chimera is a research initiative focused on developing "
+            "novel bio-integrated interfaces. It aims to merge biological "
+            "systems with advanced computing technologies."
+        )
+    },
+    "doc2": {
+        "title": "Chimera's Neural Interface",
+        "content": (
+            "The core component of Project Chimera is a neural interface "
+            "that allows for bidirectional communication between the brain "
+            "and external devices. This interface uses biocompatible "
+            "nanomaterials."
+        )
+    },
+    "doc3": {
+        "title": "Applications of Chimera",
+        "content": (
+            "Potential applications of Project Chimera include advanced "
+            "prosthetics, treatment of neurological disorders, and enhanced "
+            "human-computer interaction. Ethical considerations are paramount."
+        )
+    }
+}
+
+
+def naive_generation(query):
+    prompt = f"Answer directly the following query: {query}"
+    return get_llm_response(prompt)
+
+
+def rag_retrieval(query, documents):
+    # TODO: Split the query into lowercase words and store them in a set
+    query_words = set(query.lower().split())
+    # TODO: For each document, split its content into lowercase words and store them in a set
+    best_doc_id = None
+    best_overlap = 0
+    
+    for doc_id, doc in documents.items():
+        # Compare the query words with the document's content words
+        doc_words = set(doc["content"].lower().split())
+        overlap = len(query_words.intersection(doc_words))
+    # TODO: Calculate the overlap between the query words and document words
+        if overlap > best_overlap:
+            best_overlap = overlap
+            best_doc_id = doc_id
+    # TODO: Return the document with the highest overlap
+    return documents.get(best_doc_id)
+    pass
+
+
+def rag_generation(query, document):
+    if document:
+        snippet = f"{document['title']}: {document['content']}"
+        prompt = f"Using the following information: '{snippet}', answer: {query}"
+    else:
+        prompt = f"No relevant information found. Answer directly: {query}"
+    return get_llm_response(prompt)
+
+
+if __name__ == "__main__":
+    query = "What is the main goal of Project Chimera?"
+    print("Naive approach:", naive_generation(query))
+    retrieved_doc = rag_retrieval(query, KNOWLEDGE_BASE)
+    print("RAG approach:", rag_generation(query, retrieved_doc))
