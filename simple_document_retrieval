@@ -35,23 +35,28 @@ def naive_generation(query):
 
 
 def rag_retrieval(query, documents):
-    # TODO: Split the query into lowercase words and store them in a set
+    # Split the query into lowercase words and store them in a set
     query_words = set(query.lower().split())
-    # TODO: For each document, split its content into lowercase words and store them in a set
     best_doc_id = None
-    best_overlap = 0
+    best_score = 0
     
     for doc_id, doc in documents.items():
-        # Compare the query words with the document's content words
-        doc_words = set(doc["content"].lower().split())
-        overlap = len(query_words.intersection(doc_words))
-    # TODO: Calculate the overlap between the query words and document words
-        if overlap > best_overlap:
-            best_overlap = overlap
+        # Get content and title words in lowercase
+        content_words = set(doc["content"].lower().split())
+        title_words = set(doc["title"].lower().split())
+        
+        # Calculate overlap with content and title separately
+        content_overlap = len(query_words.intersection(content_words))
+        title_overlap = len(query_words.intersection(title_words))
+        
+        # Give more weight to title matches (2x) as they're often more relevant
+        total_score = content_overlap + (title_overlap * 2)
+        
+        if total_score > best_score:
+            best_score = total_score
             best_doc_id = doc_id
-    # TODO: Return the document with the highest overlap
-    return documents.get(best_doc_id)
-    pass
+    
+    return documents.get(best_doc_id) if best_doc_id else None
 
 
 def rag_generation(query, document):
