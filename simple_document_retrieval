@@ -34,11 +34,10 @@ def naive_generation(query):
     return get_llm_response(prompt)
 
 
-def rag_retrieval(query, documents):
+def rag_retrieval(query, documents, min_score=1):
     # Split the query into lowercase words and store them in a set
     query_words = set(query.lower().split())
-    best_doc_id = None
-    best_score = 0
+    matching_docs = []
     
     for doc_id, doc in documents.items():
         # Get content and title words in lowercase
@@ -52,24 +51,38 @@ def rag_retrieval(query, documents):
         # Give more weight to title matches (2x) as they're often more relevant
         total_score = content_overlap + (title_overlap * 2)
         
-        if total_score > best_score:
-            best_score = total_score
-            best_doc_id = doc_id
+        if total_score >= min_score:
+            matching_docs.append((doc, total_score))
     
-    return documents.get(best_doc_id) if best_doc_id else None
+    # Sort by score in descending order
+    matching_docs.sort(key=lambda x: x[1], reverse=True)
+    return [doc for doc, score in matching_docs]
 
 
-def rag_generation(query, document):
-    if document:
-        snippet = f"{document['title']}: {document['content']}"
-        prompt = f"Using the following information: '{snippet}', answer: {query}"
-    else:
+def rag_generation(query, documents):
+    if not documents:
         prompt = f"No relevant information found. Answer directly: {query}"
+    else:
+        context = "\n".join([f"- {doc['title']}: {doc['content']}" for doc in documents])
+        prompt = (
+            f"Use the following information to answer the query. "
+            f"If the information is not sufficient, say so.\n\n"
+            f"Context:\n{context}\n\n"
+            f"Query: {query}"
+        )
     return get_llm_response(prompt)
 
 
 if __name__ == "__main__":
     query = "What is the main goal of Project Chimera?"
     print("Naive approach:", naive_generation(query))
-    retrieved_doc = rag_retrieval(query, KNOWLEDGE_BASE)
-    print("RAG approach:", rag_generation(query, retrieved_doc))
+    
+    # Get all documents with at least 1 word match
+    matching_docs = rag_retrieval(query, KNOWLEDGE_BASE, min_score=1)
+    print(f"\nFound {len(matching_docs)} relevant documents")
+    for i, doc in enumerate(matching_docs, 1):
+        print(f"\nDocument {i} (Title: {doc['title']}):")
+        print(doc['content'])
+    
+    print("\nRAG approach:")
+    print(rag_generation(query, matching_docs))
