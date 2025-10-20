@@ -1,3 +1,30 @@
+"""
+Simple RAG (Retrieval-Augmented Generation) Implementation
+
+This approach demonstrates the usefulness of RAG over naive LLM generation by:
+
+1. **Contextual Accuracy**: Instead of relying solely on the LLM's training data,
+   RAG retrieves relevant documents from a knowledge base, ensuring answers are
+   grounded in specific, up-to-date information.
+
+2. **Reduced Hallucination**: By providing relevant context, RAG significantly
+   reduces the likelihood of the LLM generating factually incorrect information
+   that might not exist in its training data.
+
+3. **Domain-Specific Knowledge**: The retrieval mechanism allows the system to
+   access specialized knowledge (like Project Chimera details) that may not be
+   well-represented in the LLM's training corpus.
+
+4. **Transparency**: Users can see which documents informed the answer, providing
+   traceability and allowing verification of the information sources.
+
+5. **Scalability**: The knowledge base can be easily updated with new documents
+   without retraining the LLM, making it practical for dynamic information systems.
+
+This implementation uses a simple word-overlap scoring mechanism for retrieval,
+which while basic, effectively demonstrates the core RAG concept.
+"""
+
 from scripts.llm import get_llm_response
 
 KNOWLEDGE_BASE = {
